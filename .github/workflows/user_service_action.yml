@@ -30,6 +30,7 @@ jobs:
 
       - name: Build & Test with Maven
         run: mvn -B clean verify
+        working-directory: ./your-subdirectory
 
       - name: Run SonarCloud Scan
         env:
