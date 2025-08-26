@@ -17,10 +17,12 @@ import lombok.*;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="userId")
     private Long id;
 
     private String firstName;
     private String lastName;
+    private String username;
     @Column(nullable = false, unique = true)
     private String email;
     private String password;

@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/user-service
+    url: jdbc:postgresql://localhost:5432/user_service
     username: postgres
     password: Welcome@1234
     driver-class-name: org.postgresql.Driver
@@ -13,7 +13,12 @@ spring:
 
 server:
   port: 8081
+eureka:
+  client:
+    service-url:
+        defaultZone: http://localhost:8761/eureka
 
 camel:
   springboot:
     name: userservice-camel
+#debug: false

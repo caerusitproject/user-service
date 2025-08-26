@@ -1,5 +1,7 @@
 package com.caerus.userservice.dto;
 
+
+
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -18,12 +20,17 @@ public class UserDto
 
     @NotEmpty(message = "Last name should not be empty")
     private String lastName;
+    @NotEmpty(message = "Username should not be empty replace with your email")
+    private String username;
 
     @NotEmpty(message = "Email should not be empty")
     @Email
     private String email;
-
-    @NotNull(message = "Password should not be empty")
+    
+   
+    @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$",
+    message = "Password must be at least 8 characters and contain at least one capital letter and one number")
+    @NotNull(message = "Password is required")
     private String password;
 
    
@@ -34,8 +41,5 @@ public class UserDto
     
     private Boolean isActive;
     
-    
-
-   	
 	private String role;
 }

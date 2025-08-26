@@ -3,8 +3,9 @@ import java.util.List;
 
 import com.caerus.userservice.dto.UserDto;
 import com.caerus.userservice.model.User;
+import com.caerus.userservice.request.RegisterRequest;
 
-public interface UserService {
+public interface IUserService {
 		
 	void saveUser(UserDto userDto);
 
