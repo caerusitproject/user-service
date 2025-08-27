@@ -1,4 +1,5 @@
 package com.caerus.userservice.model;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -27,7 +28,8 @@ public class User {
     private String email;
     private String password;
     private String phone;
-    private LocalDateTime createdAt;
+    private Instant createdAt;
+    private Instant updatedAt;
     private Boolean isActive;
     
     @ManyToMany(fetch = FetchType.LAZY)
