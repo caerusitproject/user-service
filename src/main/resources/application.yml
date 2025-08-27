@@ -1,0 +1,28 @@
+spring:
+  #datasource:
+   # url:  {DB_URL}
+   # username: {DB_USER}
+   # password: {DB_PASSWORD}
+   # driver-class-name: org.postgresql.Driver
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+  port: 8081
+eureka:
+  client:
+    service-url:
+        defaultZone: http://localhost:8761/eureka
+
+camel:
+  springboot:
+    name: userservice-camel
+#debug: false
