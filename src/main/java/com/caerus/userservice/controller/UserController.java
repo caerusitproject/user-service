@@ -5,18 +5,13 @@ import java.util.Map;
 
 import com.caerus.userservice.payload.SuccessResponse;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.caerus.userservice.dto.AuthUserDto;
@@ -43,38 +38,48 @@ public class UserController {
     }
 
     @GetMapping
+   public ResponseEntity<Page<UserDto>> getAllUsers(
+           @RequestParam(defaultValue = "0") int page,
+           @RequestParam(defaultValue = "10") int size,
+           @RequestParam(defaultValue = "id") String sortBy,
+           @RequestParam(defaultValue = "asc") String sortOrder,
+           @RequestParam(required = false) String search
+    ){
+        Sort.Direction direction = sortOrder.equalsIgnoreCase("desc")
+                ? Sort.Direction.DESC
+                : Sort.Direction.ASC;
 
-    public ResponseEntity<List<UserDto>> getAll() {
-        return ResponseEntity.ok(userService.findAllUsers().stream()
-                .map(user -> modelMapper.map(user, UserDto.class)).toList());
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        return ResponseEntity.ok(userService.getAllUsers(search, pageable));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(modelMapper.map(userService.findUserById(id), UserDto.class));
+    public ResponseEntity<SuccessResponse<UserDto>> getUserById(@PathVariable Long id) {
+        UserDto userDto = userService.findUserById(id);
+        return ResponseEntity.ok(new SuccessResponse<>(userDto));
     }
 
-    @GetMapping("email/{email}")
-    public ResponseEntity<UserDto> getUserByEmail(@PathVariable String email) {
-        return ResponseEntity.ok(modelMapper.map(userService.findUserByEmail(email), UserDto.class));
+    @GetMapping("/email/{email}")
+    public ResponseEntity<SuccessResponse<UserDto>> getUserByEmail(@PathVariable String email) {
+        UserDto userDto = userService.findUserByEmail(email);
+        return ResponseEntity.ok(new SuccessResponse<>(userDto));
     }
 
     @GetMapping("username/{username}")
-    public ResponseEntity<AuthUserDto> getUserByUsername(@PathVariable String username) {
-        return ResponseEntity.ok(modelMapper.map(userService.findUserByUsername(username), AuthUserDto.class));
+    public ResponseEntity<SuccessResponse<UserDto>> getUserByUsername(@PathVariable String username) {
+        UserDto userDto = userService.findUserByUsername(username);
+        return ResponseEntity.ok(new SuccessResponse<>(userDto));
     }
 
     @PutMapping("/{id}")
-    //@PreAuthorize("hasRole('USER_ROLE') or @iUserService.getUserById(#request.id).username == principal")
-    public ResponseEntity<UserDto> updateUserById(@Valid @RequestPart UserDto request,
-                                                  @RequestPart(required = false) MultipartFile file) {
-        return ResponseEntity.ok(modelMapper.map(userService.findUserById(request.getId()), UserDto.class));
+    public ResponseEntity<SuccessResponse<UserDto>> updateUserById(@PathVariable Long id, @Valid @RequestBody UserDto request) {
+        return ResponseEntity.ok(new SuccessResponse<>("Data updated successfully", userService.updateUserById(id, request)));
     }
 
     @DeleteMapping("/{id}")
-   // @PreAuthorize("hasRole('ADMIN') or @iUserService.getUserById(#id).username == principal")
     public ResponseEntity<Void> deleteUserById(@PathVariable Long id) {
         userService.deleteUserById(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 }
