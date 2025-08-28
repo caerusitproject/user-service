@@ -3,11 +3,10 @@ import java.util.List;
 
 import com.caerus.userservice.dto.UserDto;
 import com.caerus.userservice.model.User;
-import com.caerus.userservice.request.RegisterRequest;
 
-public interface IUserService {
+public interface UserService {
 		
-	void saveUser(UserDto userDto);
+	Long saveUser(UserDto userDto);
 
     List<UserDto> findAllUsers();
 

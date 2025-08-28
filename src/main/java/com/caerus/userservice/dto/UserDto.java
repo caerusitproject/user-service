@@ -20,8 +20,6 @@ public class UserDto
 
     @NotEmpty(message = "Last name should not be empty")
     private String lastName;
-    @NotEmpty(message = "Username should not be empty replace with your email")
-    private String username;
 
     @NotEmpty(message = "Email should not be empty")
     @Email

@@ -1,13 +1,15 @@
 package com.caerus.userservice.service;
 
+import com.caerus.userservice.enums.RoleType;
+import com.caerus.userservice.exception.ResourceAlreadyExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDateTime;
-import java.util.Arrays;
+import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -17,45 +19,47 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.caerus.userservice.dto.UserDto;
 import com.caerus.userservice.exception.NotFoundException;
-import com.caerus.userservice.model.ERole;
 import com.caerus.userservice.model.Role;
 import com.caerus.userservice.model.User;
 import com.caerus.userservice.repository.RoleRepository;
 import com.caerus.userservice.repository.UserRepository;
-import com.caerus.userservice.request.RegisterRequest;
 
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl implements IUserService {
+public class UserServiceImpl implements UserService {
 
-	private UserRepository userRepository;
-	private RoleRepository roleRepository;
-	private PasswordEncoder passwordEncoder;
-	private ModelMapper modelMapper;
-
-	public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository,
-			PasswordEncoder passwordEncoder) {
-		this.userRepository = userRepository;
-		this.roleRepository = roleRepository;
-		this.passwordEncoder = passwordEncoder;
-	}
+	private final UserRepository userRepository;
+	private final RoleRepository roleRepository;
+	private final PasswordEncoder passwordEncoder;
+	private final ModelMapper modelMapper;
 
 	@Override
-	public void saveUser(UserDto userDto) {
-		User user = new User();
-		user.setFirstName(userDto.getFirstName());
-		user.setLastName(userDto.getLastName());
-		user.setEmail(userDto.getEmail());
-		user.setPassword(passwordEncoder.encode(userDto.getPassword()));
-		user.setPhone(userDto.getPhone());
-		user.setIsActive(false);
-		user.setCreatedAt(LocalDateTime.now());
-		Role role = roleRepository.findByName("USER_ROLE").get();
-		role = checkRoleExist();
-		user.setRoles(null);
-		userRepository.save(user);
+	public Long saveUser(UserDto userDto) {
 
+        userRepository.findByEmail(userDto.getEmail()).ifPresent(user -> {
+            throw new ResourceAlreadyExistsException("User with email " + userDto.getEmail()+ " already exists");
+        });
+
+        Role role = roleRepository.findByName(RoleType.USER_ROLE.name())
+                .orElseGet(this::createDefaultUserRole);
+
+        User user = modelMapper.map(userDto, User.class);
+        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        user.setIsActive(false);
+        user.setCreatedAt(Instant.now());
+        user.setUpdatedAt(Instant.now());
+        user.setRoles(Collections.singleton(role));
+
+        User savedUser = userRepository.save(user);
+
+        return savedUser.getId();
 	}
+
+    private Role createDefaultUserRole() {
+        Role role = new Role();
+        role.setName("USER_ROLE");
+        return roleRepository.save(role);
+    }
 
 	public void deleteUserById(Long userId) {
 		Optional<User> userOptional = userRepository.findById(userId);
@@ -117,7 +121,7 @@ public class UserServiceImpl implements IUserService {
 		userDto.setLastName(user.getLastName());
 		userDto.setEmail(user.getEmail());
 		userDto.setPhone(user.getPhone());
-		userDto.setRole(ERole.valueOf(user.getRoles().iterator().next().getName()).name());
+		//userDto.setRole(ERole.valueOf(user.getRoles().iterator().next().getName()).name());
 		return userDto;
 	}
 

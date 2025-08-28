@@ -3,6 +3,7 @@ import java.nio.file.AccessDeniedException;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.caerus.userservice.payload.ErrorResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,30 +41,32 @@ public class GeneralExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public final ResponseEntity<?> handleAllException(Exception ex) {
-        Map<String, String> errors = new HashMap<>();
-        errors.put("error", ex.getMessage());
-        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    public final ResponseEntity<ErrorResponse> handleAllException(Exception exception) {
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<?> notFoundException(NotFoundException exception) {
-        Map<String, String> errors = new HashMap<>();
-        errors.put("error", exception.getMessage());
-        return new ResponseEntity<>(errors, HttpStatus.NOT_FOUND);
+    public ResponseEntity<ErrorResponse> notFoundException(NotFoundException exception) {
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(UnauthorizedException.class)
-    public ResponseEntity<?> unauthorizedException(UnauthorizedException exception) {
-        Map<String, String> errors = new HashMap<>();
-        errors.put("error", exception.getMessage());
-        return new ResponseEntity<>(errors, HttpStatus.UNAUTHORIZED);
+    public ResponseEntity<ErrorResponse> unauthorizedException(UnauthorizedException exception) {
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<?> accessDeniedException(AccessDeniedException exception) {
-        Map<String, String> errors = new HashMap<>();
-        errors.put("error", exception.getMessage());
-        return new ResponseEntity<>(errors, HttpStatus.FORBIDDEN);
+    public ResponseEntity<ErrorResponse> accessDeniedException(AccessDeniedException exception) {
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> resourceAlreadyExistsException(ResourceAlreadyExistsException exception) {
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 }
