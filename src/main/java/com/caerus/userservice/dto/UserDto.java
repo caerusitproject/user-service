@@ -5,6 +5,8 @@ package com.caerus.userservice.dto;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.util.Set;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -36,8 +38,10 @@ public class UserDto
     @Pattern(regexp = "\\d{10}", message = "Phone number should have exactly 10 numbers")
     private String phone;
 
+    private String username;
+
     
     private Boolean isActive;
     
-	private String role;
+	private Set<String> role;
 }
