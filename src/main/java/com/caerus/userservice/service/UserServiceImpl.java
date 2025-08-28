@@ -2,10 +2,9 @@ package com.caerus.userservice.service;
 
 import com.caerus.userservice.enums.RoleType;
 import com.caerus.userservice.exception.ResourceAlreadyExistsException;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
-import org.modelmapper.ModelMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,7 +14,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.caerus.userservice.dto.UserDto;
 import com.caerus.userservice.exception.NotFoundException;
@@ -26,12 +24,12 @@ import com.caerus.userservice.repository.UserRepository;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
 
 	private final UserRepository userRepository;
 	private final RoleRepository roleRepository;
 	private final PasswordEncoder passwordEncoder;
-	private final ModelMapper modelMapper;
 
 	@Override
 	public Long saveUser(UserDto userDto) {
@@ -126,7 +124,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto findUserById(Long userId) {
-        Optional<User> userOptional = userRepository.findById(userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found with id " + userId));
 

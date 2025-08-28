@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.caerus.userservice.payload.SuccessResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
+@Slf4j
 public class UserController {
 
     private final UserService userService;
@@ -32,7 +34,7 @@ public class UserController {
     @PostMapping
     public ResponseEntity<SuccessResponse<Map<String, Long>>> save(@Valid @RequestBody UserDto userDto) {
        long id = userService.saveUser(userDto);
-        Map<String, Long> responseData = Map.of("userId", id);
+        Map<String, Long> responseData = Map.of("id", id);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new SuccessResponse<>("User created successfully", responseData));
     }
