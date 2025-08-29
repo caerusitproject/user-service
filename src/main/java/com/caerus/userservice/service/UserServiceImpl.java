@@ -1,5 +1,7 @@
 package com.caerus.userservice.service;
 
+import com.caerus.userservice.configure.ModelMapperConfig;
+import com.caerus.userservice.dto.UserUpdateDto;
 import com.caerus.userservice.enums.RoleType;
 import com.caerus.userservice.exception.ResourceAlreadyExistsException;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ public class UserServiceImpl implements UserService {
 	private final UserRepository userRepository;
 	private final RoleRepository roleRepository;
 	private final PasswordEncoder passwordEncoder;
+    private final ModelMapperConfig modelMapper;
 
 	@Override
 	public Long saveUser(UserDto userDto) {
@@ -62,17 +65,11 @@ public class UserServiceImpl implements UserService {
     private User mapDtoToUser(UserDto userDto, User existingUser) {
         User user = (existingUser != null) ? existingUser : new User();
 
-        user.setFirstName(userDto.getFirstName());
-        user.setLastName(userDto.getLastName());
-        user.setPhone(userDto.getPhone());
-        user.setIsActive(userDto.getIsActive());
+        modelMapper.getModelMapper().map(userDto, user);
 
         if (existingUser == null) {
             user.setUsername(userDto.getEmail());
-            user.setCreatedAt(Instant.now());
         }
-
-        user.setEmail(userDto.getEmail());
 
         if (userDto.getPassword() != null && !userDto.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(userDto.getPassword()));
@@ -86,7 +83,6 @@ public class UserServiceImpl implements UserService {
             user.setRoles(roles);
         }
 
-        user.setUpdatedAt(Instant.now());
         return user;
     }
 
@@ -105,21 +101,15 @@ public class UserServiceImpl implements UserService {
     }
 
     private UserDto mapToDto(User user) {
-        return UserDto.builder()
-                .id(user.getId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .password(user.getPassword())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .phone(user.getPhone())
-                .isActive(user.getIsActive())
-                .role(
-                        user.getRoles().stream()
-                                .map(Role::getName)
-                                .collect(Collectors.toSet())
-                )
-                .build();
+        UserDto dto = modelMapper.getModelMapper().map(user, UserDto.class);
+
+        dto.setRole(
+                user.getRoles().stream()
+                        .map(Role::getName)
+                        .collect(Collectors.toSet())
+        );
+
+        return dto;
     }
 
     @Override
@@ -155,9 +145,11 @@ public class UserServiceImpl implements UserService {
 	}
 
     @Override
-    public UserDto updateUserById(Long userId, UserDto userDto) {
+    public UserDto updateUserById(Long userId, UserUpdateDto userUpdateDto) {
         User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+
+        UserDto userDto = modelMapper.getModelMapper().map(userUpdateDto, UserDto.class);
 
         if (!existingUser.getEmail().equals(userDto.getEmail())) {
             userRepository.findByEmail(userDto.getEmail()).ifPresent(user -> {

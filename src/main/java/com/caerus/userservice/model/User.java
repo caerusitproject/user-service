@@ -28,8 +28,23 @@ public class User {
     private String email;
     private String password;
     private String phone;
-    private Instant createdAt;
-    private Instant updatedAt;
+    @Column(columnDefinition = "TIMESTAMP WITH TIME ZONE", updatable = false)
+    protected Instant createdAt;
+
+    @Column(columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    protected Instant updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        Instant now = Instant.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = Instant.now();
+    }
     private Boolean isActive;
     
     @ManyToMany(fetch = FetchType.LAZY)

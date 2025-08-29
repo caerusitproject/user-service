@@ -5,6 +5,7 @@ package com.caerus.userservice.dto;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.time.Instant;
 import java.util.Set;
 
 @Getter
@@ -40,8 +41,11 @@ public class UserDto
 
     private String username;
 
-    
     private Boolean isActive;
     
 	private Set<String> role;
+
+    private Instant createdAt;
+
+    private Instant updatedAt;
 }

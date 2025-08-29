@@ -1,7 +1,6 @@
 package com.caerus.userservice.payload;
 
 import lombok.Data;
-import org.springframework.http.HttpStatus;
 
 import java.time.Instant;
 

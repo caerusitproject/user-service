@@ -3,6 +3,7 @@ package com.caerus.userservice.controller;
 import java.util.List;
 import java.util.Map;
 
+import com.caerus.userservice.dto.UserUpdateDto;
 import com.caerus.userservice.payload.SuccessResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -75,7 +76,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<SuccessResponse<UserDto>> updateUserById(@PathVariable Long id, @Valid @RequestBody UserDto request) {
+    public ResponseEntity<SuccessResponse<UserDto>> updateUserById(@PathVariable Long id, @Valid @RequestBody UserUpdateDto request) {
         return ResponseEntity.ok(new SuccessResponse<>("Data updated successfully", userService.updateUserById(id, request)));
     }
 
