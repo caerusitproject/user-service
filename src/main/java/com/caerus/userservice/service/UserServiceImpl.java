@@ -69,7 +69,6 @@ public class UserServiceImpl implements UserService {
 
         if (existingUser == null) {
             user.setUsername(userDto.getEmail());
-            user.setCreatedAt(Instant.now());
         }
 
         user.setEmail(userDto.getEmail());
@@ -86,7 +85,6 @@ public class UserServiceImpl implements UserService {
             user.setRoles(roles);
         }
 
-        user.setUpdatedAt(Instant.now());
         return user;
     }
 
@@ -119,6 +117,8 @@ public class UserServiceImpl implements UserService {
                                 .map(Role::getName)
                                 .collect(Collectors.toSet())
                 )
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
                 .build();
     }
 
