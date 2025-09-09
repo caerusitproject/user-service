@@ -1,8 +1,9 @@
 package com.caerus.userservice.controller;
 
-import java.util.List;
 import java.util.Map;
 
+import com.caerus.userservice.dto.ApiResponse;
+import com.caerus.userservice.dto.RegisterRequest;
 import com.caerus.userservice.dto.UserUpdateDto;
 import com.caerus.userservice.payload.SuccessResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -14,10 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import com.caerus.userservice.dto.AuthUserDto;
-import com.caerus.userservice.dto.UserDto;
 import com.caerus.userservice.service.UserService;
 
 import jakarta.validation.Valid;
@@ -30,18 +28,18 @@ import lombok.RequiredArgsConstructor;
 public class UserController {
 
     private final UserService userService;
-    private final ModelMapper modelMapper;
 
     @PostMapping
-    public ResponseEntity<SuccessResponse<Map<String, Long>>> save(@Valid @RequestBody UserDto userDto) {
-       long id = userService.saveUser(userDto);
+    public ResponseEntity<ApiResponse<Map<String, Long>>> save(@Valid @RequestBody RegisterRequest registerRequest) {
+        System.out.println(registerRequest.toString());
+        Long id = userService.saveUser(registerRequest);
         Map<String, Long> responseData = Map.of("id", id);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new SuccessResponse<>("User created successfully", responseData));
+                .body(ApiResponse.success("User created successfully", responseData));
     }
 
     @GetMapping
-   public ResponseEntity<Page<UserDto>> getAllUsers(
+   public ResponseEntity<Page<RegisterRequest>> getAllUsers(
            @RequestParam(defaultValue = "0") int page,
            @RequestParam(defaultValue = "10") int size,
            @RequestParam(defaultValue = "id") String sortBy,
@@ -58,25 +56,25 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<SuccessResponse<UserDto>> getUserById(@PathVariable Long id) {
-        UserDto userDto = userService.findUserById(id);
-        return ResponseEntity.ok(new SuccessResponse<>(userDto));
+    public ResponseEntity<SuccessResponse<RegisterRequest>> getUserById(@PathVariable Long id) {
+        RegisterRequest registerRequest = userService.findUserById(id);
+        return ResponseEntity.ok(new SuccessResponse<>(registerRequest));
     }
 
     @GetMapping("/email/{email}")
-    public ResponseEntity<SuccessResponse<UserDto>> getUserByEmail(@PathVariable String email) {
-        UserDto userDto = userService.findUserByEmail(email);
-        return ResponseEntity.ok(new SuccessResponse<>(userDto));
+    public ResponseEntity<SuccessResponse<RegisterRequest>> getUserByEmail(@PathVariable String email) {
+        RegisterRequest registerRequest = userService.findUserByEmail(email);
+        return ResponseEntity.ok(new SuccessResponse<>(registerRequest));
     }
 
     @GetMapping("username/{username}")
-    public ResponseEntity<SuccessResponse<UserDto>> getUserByUsername(@PathVariable String username) {
-        UserDto userDto = userService.findUserByUsername(username);
-        return ResponseEntity.ok(new SuccessResponse<>(userDto));
+    public ResponseEntity<SuccessResponse<RegisterRequest>> getUserByUsername(@PathVariable String username) {
+        RegisterRequest registerRequest = userService.findUserByUsername(username);
+        return ResponseEntity.ok(new SuccessResponse<>(registerRequest));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<SuccessResponse<UserDto>> updateUserById(@PathVariable Long id, @Valid @RequestBody UserUpdateDto request) {
+    public ResponseEntity<SuccessResponse<RegisterRequest>> updateUserById(@PathVariable Long id, @Valid @RequestBody UserUpdateDto request) {
         return ResponseEntity.ok(new SuccessResponse<>("Data updated successfully", userService.updateUserById(id, request)));
     }
 
