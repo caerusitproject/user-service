@@ -4,10 +4,8 @@
     <property name="APP_NAME" value="userservice"/>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <customFields>{"app":"${APP_NAME}","env":"dev"}</customFields>
-            <includeMdcKeyName>correlationId</includeMdcKeyName>
-            <includeMdcKeyName>userId</includeMdcKeyName>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 

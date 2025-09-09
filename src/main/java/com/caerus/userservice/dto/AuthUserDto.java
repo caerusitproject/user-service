@@ -1,6 +1,6 @@
 package com.caerus.userservice.dto;
 
-import com.caerus.userservice.model.Role;
+import com.caerus.userservice.domain.Role;
 
 import lombok.Data;
 

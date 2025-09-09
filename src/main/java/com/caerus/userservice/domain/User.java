@@ -1,9 +1,6 @@
-package com.caerus.userservice.model;
+package com.caerus.userservice.domain;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import jakarta.persistence.*;
@@ -11,25 +8,28 @@ import lombok.*;
 
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+public class User extends AuditableEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="userId")
+    @Column(name="user_id")
     private Long id;
 
     private String firstName;
     private String lastName;
     private String username;
+
     @Column(nullable = false, unique = true)
     private String email;
+
     private String password;
+
     private String phone;
-    private Instant createdAt;
-    private Instant updatedAt;
+
     private Boolean isActive;
     
     @ManyToMany(fetch = FetchType.LAZY)

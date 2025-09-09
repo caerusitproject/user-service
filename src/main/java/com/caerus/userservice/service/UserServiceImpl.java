@@ -1,7 +1,11 @@
 package com.caerus.userservice.service;
 
+import com.caerus.userservice.configure.ModelMapperConfig;
+import com.caerus.userservice.dto.RegisterRequest;
+import com.caerus.userservice.dto.UserUpdateDto;
 import com.caerus.userservice.enums.RoleType;
 import com.caerus.userservice.exception.ResourceAlreadyExistsException;
+import com.caerus.userservice.mapper.RegisterMapper;
 import lombok.RequiredArgsConstructor;
 
 import lombok.extern.slf4j.Slf4j;
@@ -9,16 +13,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.caerus.userservice.dto.UserDto;
 import com.caerus.userservice.exception.NotFoundException;
-import com.caerus.userservice.model.Role;
-import com.caerus.userservice.model.User;
+import com.caerus.userservice.domain.Role;
+import com.caerus.userservice.domain.User;
 import com.caerus.userservice.repository.RoleRepository;
 import com.caerus.userservice.repository.UserRepository;
 
@@ -30,28 +32,45 @@ public class UserServiceImpl implements UserService {
 	private final UserRepository userRepository;
 	private final RoleRepository roleRepository;
 	private final PasswordEncoder passwordEncoder;
+    private final ModelMapperConfig modelMapper;
+    private final RegisterMapper registerMapper;
 
-	@Override
-	public Long saveUser(UserDto userDto) {
+    @Override
+    public Long saveUser(RegisterRequest registerRequest) {
+        userRepository.findByEmail(registerRequest.getEmail())
+                .ifPresent(user -> {
+                    throw new ResourceAlreadyExistsException(
+                            "User with email " + registerRequest.getEmail() + " already exists"
+                    );
+                });
 
-        userRepository.findByEmail(userDto.getEmail()).ifPresent(user -> {
-            throw new ResourceAlreadyExistsException(
-                    "User with email " + userDto.getEmail() + " already exists"
-            );
-        });
-
-        if (userDto.getRole() == null) {
+        if (registerRequest.getRole() == null || registerRequest.getRole().isEmpty()) {
             Role defaultRole = roleRepository.findByName(RoleType.USER_ROLE.name())
                     .orElseGet(this::createDefaultUserRole);
-            userDto.setRole(Collections.singleton(defaultRole.getName()));
+            registerRequest.setRole(Collections.singleton(defaultRole.getName()));
         }
 
-        User user = mapDtoToUser(userDto, null);
-        user.setIsActive(false);
-        User savedUser = userRepository.save(user);
+        User user = registerMapper.toEntity(registerRequest);
 
+        user.setUsername(registerRequest.getEmail());
+        user.setIsActive(false);
+
+        if (registerRequest.getPassword() != null && !registerRequest.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+        }
+
+        if (registerRequest.getRole() != null && !registerRequest.getRole().isEmpty()) {
+            Set<Role> roles = registerRequest.getRole().stream()
+                    .map(roleName -> roleRepository.findByName(roleName)
+                            .orElseThrow(() -> new NotFoundException("Role not found: " + roleName)))
+                    .collect(Collectors.toSet());
+            user.setRoles(roles);
+        }
+
+        User savedUser = userRepository.save(user);
         return savedUser.getId();
-	}
+    }
+
 
     private Role createDefaultUserRole() {
         Role role = new Role();
@@ -59,40 +78,33 @@ public class UserServiceImpl implements UserService {
         return roleRepository.save(role);
     }
 
-    private User mapDtoToUser(UserDto userDto, User existingUser) {
+    private User mapDtoToUser(RegisterRequest registerRequest, User existingUser) {
         User user = (existingUser != null) ? existingUser : new User();
 
-        user.setFirstName(userDto.getFirstName());
-        user.setLastName(userDto.getLastName());
-        user.setPhone(userDto.getPhone());
-        user.setIsActive(userDto.getIsActive());
+        modelMapper.getModelMapper().map(registerRequest, user);
 
         if (existingUser == null) {
-            user.setUsername(userDto.getEmail());
-            user.setCreatedAt(Instant.now());
+            user.setUsername(registerRequest.getEmail());
         }
 
-        user.setEmail(userDto.getEmail());
-
-        if (userDto.getPassword() != null && !userDto.getPassword().isBlank()) {
-            user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        if (registerRequest.getPassword() != null && !registerRequest.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         }
 
-        if (userDto.getRole() != null && !userDto.getRole().isEmpty()) {
-            Set<Role> roles = userDto.getRole().stream()
+        if (registerRequest.getRole() != null && !registerRequest.getRole().isEmpty()) {
+            Set<Role> roles = registerRequest.getRole().stream()
                     .map(roleName -> roleRepository.findByName(roleName)
                             .orElseThrow(() -> new NotFoundException("Role not found: " + roleName)))
                     .collect(Collectors.toSet());
             user.setRoles(roles);
         }
 
-        user.setUpdatedAt(Instant.now());
-        return user;
+            return user;
     }
 
 
     @Override
-    public Page<UserDto> getAllUsers(String search, Pageable pageable) {
+    public Page<RegisterRequest> getAllUsers(String search, Pageable pageable) {
         Page<User> users;
 
         if(search!=null && !search.isBlank()){
@@ -104,26 +116,20 @@ public class UserServiceImpl implements UserService {
         return users.map(this::mapToDto);
     }
 
-    private UserDto mapToDto(User user) {
-        return UserDto.builder()
-                .id(user.getId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .password(user.getPassword())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .phone(user.getPhone())
-                .isActive(user.getIsActive())
-                .role(
-                        user.getRoles().stream()
-                                .map(Role::getName)
-                                .collect(Collectors.toSet())
-                )
-                .build();
+    private RegisterRequest mapToDto(User user) {
+        RegisterRequest dto = modelMapper.getModelMapper().map(user, RegisterRequest.class);
+
+        dto.setRole(
+                user.getRoles().stream()
+                        .map(Role::getName)
+                        .collect(Collectors.toSet())
+        );
+
+        return dto;
     }
 
     @Override
-    public UserDto findUserById(Long userId) {
+    public RegisterRequest findUserById(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found with id " + userId));
 
@@ -131,7 +137,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto findUserByEmail(String email) {
+    public RegisterRequest findUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found with email " + email));
 
@@ -139,7 +145,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto findUserByUsername(String username) {
+    public RegisterRequest findUserByUsername(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new NotFoundException("User not found with username " + username));
 
@@ -155,17 +161,19 @@ public class UserServiceImpl implements UserService {
 	}
 
     @Override
-    public UserDto updateUserById(Long userId, UserDto userDto) {
+    public RegisterRequest updateUserById(Long userId, UserUpdateDto userUpdateDto) {
         User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
 
-        if (!existingUser.getEmail().equals(userDto.getEmail())) {
-            userRepository.findByEmail(userDto.getEmail()).ifPresent(user -> {
-                throw new ResourceAlreadyExistsException("User with email " + userDto.getEmail() + " already exists");
+        RegisterRequest registerRequest = modelMapper.getModelMapper().map(userUpdateDto, RegisterRequest.class);
+
+        if (!existingUser.getEmail().equals(registerRequest.getEmail())) {
+            userRepository.findByEmail(registerRequest.getEmail()).ifPresent(user -> {
+                throw new ResourceAlreadyExistsException("User with email " + registerRequest.getEmail() + " already exists");
             });
         }
 
-        User updatedUser = mapDtoToUser(userDto, existingUser);
+        User updatedUser = mapDtoToUser(registerRequest, existingUser);
         updatedUser = userRepository.save(updatedUser);
 
         return mapToDto(updatedUser);

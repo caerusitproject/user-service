@@ -1,5 +1,5 @@
 package com.caerus.userservice.repository;
-import com.caerus.userservice.model.User;
+import com.caerus.userservice.domain.User;
 
 import java.util.Optional;
 
