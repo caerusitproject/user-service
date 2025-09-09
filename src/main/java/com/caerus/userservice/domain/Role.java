@@ -1,4 +1,4 @@
-package com.caerus.userservice.model;
+package com.caerus.userservice.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -6,10 +6,11 @@ import lombok.*;
 
 @Entity
 @Table(name = "roles")
-@AllArgsConstructor
-@Setter
 @Getter
+@Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Role {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
