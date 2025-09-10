@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,8 +30,25 @@ public class User {
     private String email;
     private String password;
     private String phone;
-    private Instant createdAt;
-    private Instant updatedAt;
+    @Column(columnDefinition = "TIMESTAMP WITH TIME ZONE", updatable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
+    protected Instant createdAt;
+
+    @Column(columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
+    protected Instant updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        Instant now = Instant.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = Instant.now();
+    }
     private Boolean isActive;
     
     @ManyToMany(fetch = FetchType.LAZY)

@@ -1,9 +1,16 @@
 spring:
-  #datasource:
-   # url:  {DB_URL}
-   # username: {DB_USER}
-   # password: {DB_PASSWORD}
-   # driver-class-name: org.postgresql.Driver
+  application:
+    name: USERSERVICE
+#  datasource:
+#    url:  jdbc:postgresql://localhost:5432/user_service
+#    username: postgres
+#    password:  Welcome@1234
+#    driver-class-name: org.postgresql.Driver
+#  datasource:
+#    url:  {DB_URL}
+#    username: {DB_USER}
+#    password: {DB_PASSWORD}
+#    driver-class-name: org.postgresql.Driver
   datasource:
     url: jdbc:h2:mem:testdb
     username: sa
@@ -14,7 +21,14 @@ spring:
       ddl-auto: update
     show-sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-
+  kafka: 
+    brokers: localhost:29092
+    topic: 
+      name: user.notification
+logging:
+  level:
+    org.apache.camel: DEBUG
+    org.springframework: INFO
 server:
   port: 8081
 eureka:
@@ -25,4 +39,9 @@ eureka:
 camel:
   springboot:
     name: userservice-camel
+  route:
+    findAllBooks: direct:findAllBooks
+    findBookByName: direct:findBookByName
+    removeBook: direct:removeBook
+    saveUser: direct:saveBook 
 #debug: false

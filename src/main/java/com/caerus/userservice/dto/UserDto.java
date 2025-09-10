@@ -5,7 +5,10 @@ package com.caerus.userservice.dto;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.time.Instant;
 import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Getter
 @Setter
@@ -44,4 +47,9 @@ public class UserDto
     private Boolean isActive;
     
 	private Set<String> role;
+	
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
+    private Instant createdAt;
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
+    private Instant updatedAt;
 }

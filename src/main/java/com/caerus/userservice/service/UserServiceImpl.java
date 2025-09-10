@@ -5,6 +5,8 @@ import com.caerus.userservice.exception.ResourceAlreadyExistsException;
 import lombok.RequiredArgsConstructor;
 
 import lombok.extern.slf4j.Slf4j;
+
+import org.apache.camel.ProducerTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,7 +17,9 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.caerus.userservice.configure.ModelMapperConfig;
 import com.caerus.userservice.dto.UserDto;
+import com.caerus.userservice.dto.UserNotification;
 import com.caerus.userservice.exception.NotFoundException;
 import com.caerus.userservice.model.Role;
 import com.caerus.userservice.model.User;
@@ -30,6 +34,8 @@ public class UserServiceImpl implements UserService {
 	private final UserRepository userRepository;
 	private final RoleRepository roleRepository;
 	private final PasswordEncoder passwordEncoder;
+    private final ModelMapperConfig modelMapper;
+    private final ProducerTemplate producerTemplate;
 
 	@Override
 	public Long saveUser(UserDto userDto) {
@@ -49,6 +55,21 @@ public class UserServiceImpl implements UserService {
         User user = mapDtoToUser(userDto, null);
         user.setIsActive(false);
         User savedUser = userRepository.save(user);
+        
+        //process through camel route to publish to kafka
+        //producerTemplate.requestBody("direct:userSaveAndPublish", user, User.class);
+        
+        UserNotification userNotification = new UserNotification(
+				savedUser.getId()!=null ? savedUser.getId():0L,
+				savedUser.getEmail(),
+				"User creation successful",
+				"Welcome " + savedUser.getFirstName() + " " + savedUser.getLastName() + "!"
+						+ " Your account has been created successfully. Your username is: " + savedUser.getUsername(),
+				savedUser.getPhone(),
+				savedUser.getPhone()
+		);
+        
+        producerTemplate.sendBody("direct:userSaveAndNotify", userNotification);
 
         return savedUser.getId();
 	}
@@ -62,10 +83,7 @@ public class UserServiceImpl implements UserService {
     private User mapDtoToUser(UserDto userDto, User existingUser) {
         User user = (existingUser != null) ? existingUser : new User();
 
-        user.setFirstName(userDto.getFirstName());
-        user.setLastName(userDto.getLastName());
-        user.setPhone(userDto.getPhone());
-        user.setIsActive(userDto.getIsActive());
+        modelMapper.getModelMapper().map(userDto, user);
 
         if (existingUser == null) {
             user.setUsername(userDto.getEmail());

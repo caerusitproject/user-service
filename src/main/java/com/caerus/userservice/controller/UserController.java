@@ -84,4 +84,10 @@ public class UserController {
         userService.deleteUserById(id);
         return ResponseEntity.noContent().build();
     }
+    
+  //testing camel
+    @PostMapping("/camel")
+    public Long createUser(@RequestBody UserDto user) {
+    	return userService.saveUser(user);
+    }
 }
