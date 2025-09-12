@@ -2,6 +2,7 @@ package com.caerus.userservice.service;
 
 import com.caerus.userservice.configure.ModelMapperConfig;
 import com.caerus.userservice.dto.RegisterRequest;
+import com.caerus.userservice.dto.UserRegisteredEvent;
 import com.caerus.userservice.dto.UserUpdateDto;
 import com.caerus.userservice.enums.RoleType;
 import com.caerus.userservice.exception.ResourceAlreadyExistsException;
@@ -9,6 +10,7 @@ import com.caerus.userservice.mapper.RegisterMapper;
 import lombok.RequiredArgsConstructor;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.camel.ProducerTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,6 +36,7 @@ public class UserServiceImpl implements UserService {
 	private final PasswordEncoder passwordEncoder;
     private final ModelMapperConfig modelMapper;
     private final RegisterMapper registerMapper;
+    private final ProducerTemplate producerTemplate;
 
     @Override
     public Long saveUser(RegisterRequest registerRequest) {
@@ -68,6 +71,12 @@ public class UserServiceImpl implements UserService {
         }
 
         User savedUser = userRepository.save(user);
+
+        //publish event
+        UserRegisteredEvent event = new UserRegisteredEvent(user.getId(), user.getEmail(), user.getFirstName());
+        producerTemplate.sendBody("direct:user-events", event);
+        log.info("User registered event published: {}", event);
+
         return savedUser.getId();
     }
 
