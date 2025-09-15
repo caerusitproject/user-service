@@ -2,6 +2,7 @@ package com.caerus.userservice.service;
 
 import com.caerus.userservice.configure.ModelMapperConfig;
 import com.caerus.userservice.dto.RegisterRequest;
+import com.caerus.userservice.dto.UserNotificationDto;
 import com.caerus.userservice.dto.UserRegisteredEvent;
 import com.caerus.userservice.dto.UserUpdateDto;
 import com.caerus.userservice.enums.RoleType;
@@ -73,7 +74,11 @@ public class UserServiceImpl implements UserService {
         User savedUser = userRepository.save(user);
 
         //publish event
-        UserRegisteredEvent event = new UserRegisteredEvent(user.getId(), user.getEmail(), user.getFirstName());
+        UserNotificationDto event = new UserNotificationDto(savedUser.getId(), user.getFirstName(), user.getEmail(), "User Account Created Successfully", "Welcome " + savedUser.getFirstName() + " " + savedUser.getLastName() + "!"
+                + " Your account has been created successfully. Your username is: " + savedUser.getUsername(), savedUser.getCountryCode(),
+                savedUser.getPhoneNumber(),
+                savedUser.getPhoneNumber());
+
         producerTemplate.sendBody("direct:user-events", event);
         log.info("User registered event published: {}", event);
 
