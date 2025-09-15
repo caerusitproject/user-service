@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class KafkaProducerRoute extends RouteBuilder {
 
-    @Value("${spring.kafka.topic.user-notification}")
+    @Value("${spring.kafka.topic.notification}")
     private String topicName;
 
     @Value("${spring.kafka.bootstrap-servers}")
