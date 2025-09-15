@@ -2,9 +2,7 @@ package com.caerus.userservice.domain;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.caerus.userservice.validation.StrongPassword;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import lombok.*;
 
 @Entity
@@ -26,7 +24,7 @@ public class User extends AuditableEntity{
     @Column(nullable = false)
     private String lastName;
 
-    @Column(nullable = true, unique = true)
+    @Column(unique = true)
     private String username;
 
     @Column(nullable = false, unique = true)
