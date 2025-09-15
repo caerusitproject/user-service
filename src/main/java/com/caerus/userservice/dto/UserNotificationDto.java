@@ -5,8 +5,6 @@ public record UserNotificationDto(
         String fullName,
         String eventType,
         String email,
-        String subject,
-        String message,
         String countryCode,
         String phoneNumber,
         String whatsappNumber

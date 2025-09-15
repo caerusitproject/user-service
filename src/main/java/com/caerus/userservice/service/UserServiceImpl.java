@@ -6,6 +6,7 @@ import com.caerus.userservice.dto.UserNotificationDto;
 import com.caerus.userservice.dto.UserRegisteredEvent;
 import com.caerus.userservice.dto.UserUpdateDto;
 import com.caerus.userservice.enums.RoleType;
+import com.caerus.userservice.enums.UserEventType;
 import com.caerus.userservice.exception.ResourceAlreadyExistsException;
 import com.caerus.userservice.mapper.RegisterMapper;
 import lombok.RequiredArgsConstructor;
@@ -74,10 +75,8 @@ public class UserServiceImpl implements UserService {
         User savedUser = userRepository.save(user);
 
         //publish event
-        UserNotificationDto event = new UserNotificationDto(savedUser.getId(), user.getFirstName() +" "+ user.getLastName(), "Whatsapp", user.getEmail(), "User Account Created Successfully", "Welcome " + savedUser.getFirstName() + " " + savedUser.getLastName() + "!"
-                + " Your account has been created successfully. Your username is: " + savedUser.getUsername(), savedUser.getCountryCode(),
-                savedUser.getPhoneNumber(),
-                savedUser.getPhoneNumber());
+        UserNotificationDto event = new UserNotificationDto(savedUser.getId(), savedUser.getFirstName() +" "+ savedUser.getLastName(),
+                UserEventType.USER_REGISTERED.name(), savedUser.getEmail(), savedUser.getCountryCode(), savedUser.getPhoneNumber(), savedUser.getPhoneNumber());
 
         producerTemplate.sendBody("direct:user-events", event);
         log.info("User registered event published: {}", event);
