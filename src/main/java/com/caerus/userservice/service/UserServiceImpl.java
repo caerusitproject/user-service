@@ -74,7 +74,7 @@ public class UserServiceImpl implements UserService {
         User savedUser = userRepository.save(user);
 
         //publish event
-        UserNotificationDto event = new UserNotificationDto(savedUser.getId(), user.getFirstName(), user.getEmail(), "User Account Created Successfully", "Welcome " + savedUser.getFirstName() + " " + savedUser.getLastName() + "!"
+        UserNotificationDto event = new UserNotificationDto(savedUser.getId(), user.getFirstName() +" "+ user.getLastName(), "Whatsapp", user.getEmail(), "User Account Created Successfully", "Welcome " + savedUser.getFirstName() + " " + savedUser.getLastName() + "!"
                 + " Your account has been created successfully. Your username is: " + savedUser.getUsername(), savedUser.getCountryCode(),
                 savedUser.getPhoneNumber(),
                 savedUser.getPhoneNumber());

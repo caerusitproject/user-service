@@ -32,7 +32,7 @@ public class RegisterRequest {
     private String password;
 
 
-    @Pattern(regexp = "\\d{1,3}", message = "Country code must be 1 to 3 digits")
+    @Pattern(regexp = "\\d{1,4}", message = "Country code must be 1 to 4 digits")
     @NotBlank(message = "Country code should not be empty")
     private String countryCode;
 

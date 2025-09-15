@@ -2,7 +2,8 @@ package com.caerus.userservice.dto;
 
 public record UserNotificationDto(
         Long userId,
-        String firstName,
+        String fullName,
+        String eventType,
         String email,
         String subject,
         String message,

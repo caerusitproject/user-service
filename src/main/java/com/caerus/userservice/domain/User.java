@@ -35,7 +35,7 @@ public class User extends AuditableEntity{
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false, length = 3)
+    @Column(nullable = false, length = 4)
     private String countryCode;
 
     @Column(nullable = false, length = 12)
