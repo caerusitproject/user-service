@@ -2,9 +2,11 @@ package com.caerus.userservice.service;
 
 import com.caerus.userservice.configure.ModelMapperConfig;
 import com.caerus.userservice.dto.RegisterRequest;
+import com.caerus.userservice.dto.UserNotificationDto;
 import com.caerus.userservice.dto.UserRegisteredEvent;
 import com.caerus.userservice.dto.UserUpdateDto;
 import com.caerus.userservice.enums.RoleType;
+import com.caerus.userservice.enums.UserEventType;
 import com.caerus.userservice.exception.ResourceAlreadyExistsException;
 import com.caerus.userservice.mapper.RegisterMapper;
 import lombok.RequiredArgsConstructor;
@@ -73,7 +75,9 @@ public class UserServiceImpl implements UserService {
         User savedUser = userRepository.save(user);
 
         //publish event
-        UserRegisteredEvent event = new UserRegisteredEvent(user.getId(), user.getEmail(), user.getFirstName());
+        UserNotificationDto event = new UserNotificationDto(savedUser.getId(), savedUser.getFirstName() +" "+ savedUser.getLastName(),
+                UserEventType.USER_REGISTERED.name(), savedUser.getEmail(), savedUser.getCountryCode(), savedUser.getPhoneNumber(), savedUser.getPhoneNumber());
+
         producerTemplate.sendBody("direct:user-events", event);
         log.info("User registered event published: {}", event);
 

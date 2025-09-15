@@ -24,7 +24,7 @@ public class RegisterRequest {
     private String lastName;
 
     @NotEmpty(message = "Email should not be empty")
-    @Email
+    @Email(message = "Email should be valid")
     private String email;
 
     @NotNull(message = "Password is required")
@@ -32,9 +32,13 @@ public class RegisterRequest {
     private String password;
 
 
-    @NotEmpty(message="Phone number should not be empty")
-    @Pattern(regexp = "\\d{10}", message = "Phone number should have exactly 10 numbers")
-    private String phone;
+    @Pattern(regexp = "\\d{1,4}", message = "Country code must be 1 to 4 digits")
+    @NotBlank(message = "Country code should not be empty")
+    private String countryCode;
+
+    @Pattern(regexp = "\\d{4,12}", message = "Phone number must be 4 to 12 digits")
+    @NotBlank(message = "Phone number should not be empty")
+    private String phoneNumber;
 
     private Boolean isActive;
     private Set<String> role;
