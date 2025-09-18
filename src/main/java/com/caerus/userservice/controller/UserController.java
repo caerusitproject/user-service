@@ -4,10 +4,10 @@ import java.util.Map;
 
 import com.caerus.userservice.dto.ApiResponse;
 import com.caerus.userservice.dto.RegisterRequest;
+import com.caerus.userservice.dto.ResetPasswordRequest;
 import com.caerus.userservice.dto.UserUpdateDto;
 import com.caerus.userservice.payload.SuccessResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,7 +31,6 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<Map<String, Long>>> save(@Valid @RequestBody RegisterRequest registerRequest) {
-        System.out.println(registerRequest.toString());
         Long id = userService.saveUser(registerRequest);
         Map<String, Long> responseData = Map.of("id", id);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -82,5 +81,17 @@ public class UserController {
     public ResponseEntity<Void> deleteUserById(@PathVariable Long id) {
         userService.deleteUserById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/forgotPassword")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@RequestParam String email) {
+        userService.forgotPassword(email);
+       return ResponseEntity.ok(ApiResponse.success("Reset link has been sent to your email"));
+    }
+
+    @PostMapping("/resetPassword")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        userService.resetPassword(request);
+        return ResponseEntity.ok(ApiResponse.success("Password reset successful"));
     }
 }

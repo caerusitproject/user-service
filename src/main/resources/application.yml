@@ -1,44 +1,7 @@
 spring:
   application:
     name: user-service
-  datasource:
-    url: jdbc:postgresql://localhost:5432/user_service
-    username: postgres
-    password: "Welcome@1234"
-    driver-class-name: org.postgresql.Driver
-#  datasource:
-#    url: jdbc:h2:mem:testdb
-#    username: sa
-#    password:
-#    driver-class-name: org.h2.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: http://localhost:8086/.well-known/jwks.json
-
-  kafka:
-    bootstrap-servers: localhost:9092
-    topic:
-      notification: NOTIFICATION_EVENT
-
-server:
-  port: 8081
-eureka:
-  client:
-    service-url:
-        defaultZone: http://localhost:8761/eureka
-  instance:
-    prefer-ip-address: true
-    hostname: localhost
-    instance-id: ${spring.application.name}:${server.port}
-
-camel:
-  springboot:
-    name: userservice-camel
+  profiles:
+    active: dev
+  config:
+    import: optional:configserver:http://localhost:8888
