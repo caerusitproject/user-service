@@ -74,6 +74,12 @@ public class GeneralExceptionHandler extends ResponseEntityExceptionHandler {
         return buildErrorResponse(exception, HttpStatus.CONFLICT, request);
     }
 
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ErrorResponse> badRequestException(BadRequestException exception, HttpServletRequest request) {
+        log.error("BadRequestException: {}", exception.getMessage());
+        return buildErrorResponse(exception, HttpStatus.BAD_REQUEST, request);
+    }
+
     private ResponseEntity<ErrorResponse> buildErrorResponse(Exception ex, HttpStatus status, HttpServletRequest request) {
         String correlationId = MDC.get(CORRELATION_ID);
         ErrorResponse errorResponse = new ErrorResponse(

@@ -6,9 +6,9 @@ import org.springframework.stereotype.Component;
 
 
 @Component
-public class KafkaProducerRoute extends RouteBuilder {
+public class UserEventProducerRoute extends RouteBuilder {
 
-    @Value("${spring.kafka.topic.notification}")
+    @Value("${spring.kafka.topic.user-registered}")
     private String topicName;
 
     @Value("${spring.kafka.bootstrap-servers}")
@@ -16,13 +16,13 @@ public class KafkaProducerRoute extends RouteBuilder {
 
     @Override
     public void configure() {
-        errorHandler(deadLetterChannel("log:dead?level=ERROR"));
+        errorHandler(deadLetterChannel("log:dead?level=ERROR").maximumRedeliveries(5).redeliveryDelay(2000));
 
         from("direct:user-events")
                 .routeId("user-events-route")
                 .marshal().json()
                 .log("Sending message to Kafka: ${body}")
-                .to("kafka:" + topicName + "?brokers=" + kafkaBroker)
+                .to("kafka:" + topicName+ "?brokers=" + kafkaBroker)
                 .log("Message published to Kafka topic "+ topicName + ": ${body}");
     }
 }

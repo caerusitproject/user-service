@@ -1,10 +1,7 @@
 package com.caerus.userservice.service;
 
 import com.caerus.userservice.configure.ModelMapperConfig;
-import com.caerus.userservice.dto.RegisterRequest;
-import com.caerus.userservice.dto.UserNotificationDto;
-import com.caerus.userservice.dto.UserRegisteredEvent;
-import com.caerus.userservice.dto.UserUpdateDto;
+import com.caerus.userservice.dto.*;
 import com.caerus.userservice.enums.RoleType;
 import com.caerus.userservice.enums.UserEventType;
 import com.caerus.userservice.exception.ResourceAlreadyExistsException;
@@ -17,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -39,6 +37,7 @@ public class UserServiceImpl implements UserService {
     private final ModelMapperConfig modelMapper;
     private final RegisterMapper registerMapper;
     private final ProducerTemplate producerTemplate;
+    private final PasswordResetTokenService passwordResetTokenService;
 
     @Override
     public Long saveUser(RegisterRequest registerRequest) {
@@ -190,6 +189,37 @@ public class UserServiceImpl implements UserService {
         updatedUser = userRepository.save(updatedUser);
 
         return mapToDto(updatedUser);
+    }
+
+    @Override
+    public void forgotPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User not found with email " + email));
+
+        String resetToken = UUID.randomUUID().toString();
+
+        passwordResetTokenService.saveToken(user.getId(), resetToken, Duration.ofMinutes(15));
+
+        ForgotPasswordEvent event = new ForgotPasswordEvent(user.getId(), user.getEmail(),resetToken,
+                UserEventType.PASSWORD_RESET_REQUESTED.name());
+
+        producerTemplate.sendBody("direct:forgot-password-events", event);
+        log.info("Forgot password event published for user: {}", user.getEmail());
+    }
+
+    @Override
+    public void resetPassword(ResetPasswordRequest request) {
+        Long userId = passwordResetTokenService.validateToken(request.token()); //!!!Attention change this to email
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+
+        passwordResetTokenService.invalidateToken(request.token());
+
+        log.info("Password successfully reset for user: {}", user.getEmail());
     }
 
 }
