@@ -44,7 +44,7 @@ public class SecurityConfig {
                                     response.setContentType("application/json");
                                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                                     response.getWriter().write("""
-                          { "error": "Unauthorized", "message": "JWT expired or invalid" }
+                          { "error": "Unauthorized", "message": "Missing or invalid token" }
                       """);
                                 })
                 );
