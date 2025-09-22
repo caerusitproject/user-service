@@ -41,7 +41,7 @@ public class RegisterRequest {
     private String phoneNumber;
 
     private Boolean isActive;
-    private Set<String> role;
+    private Set<String> roles;
     private Instant createdAt;
     private Instant updatedAt;
 }

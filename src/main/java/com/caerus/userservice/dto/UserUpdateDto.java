@@ -12,8 +12,6 @@ import java.util.Set;
 @Builder
 public class UserUpdateDto {
 
-    private Long id;
-
     @NotBlank(message = "First name should not be empty")
     private String firstName;
 
@@ -34,5 +32,5 @@ public class UserUpdateDto {
 
     private Boolean isActive;
 
-    private Set<String> role;
+    private Set<String> roles;
 }
