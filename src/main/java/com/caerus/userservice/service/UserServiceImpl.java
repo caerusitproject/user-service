@@ -1,11 +1,10 @@
 package com.caerus.userservice.service;
 
-import com.caerus.userservice.configure.ModelMapperConfig;
 import com.caerus.userservice.dto.*;
 import com.caerus.userservice.enums.RoleType;
 import com.caerus.userservice.enums.UserEventType;
 import com.caerus.userservice.exception.ResourceAlreadyExistsException;
-import com.caerus.userservice.mapper.RegisterMapper;
+import com.caerus.userservice.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +24,7 @@ import com.caerus.userservice.domain.Role;
 import com.caerus.userservice.domain.User;
 import com.caerus.userservice.repository.RoleRepository;
 import com.caerus.userservice.repository.UserRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -34,8 +34,7 @@ public class UserServiceImpl implements UserService {
 	private final UserRepository userRepository;
 	private final RoleRepository roleRepository;
 	private final PasswordEncoder passwordEncoder;
-    private final ModelMapperConfig modelMapper;
-    private final RegisterMapper registerMapper;
+    private final UserMapper userMapper;
     private final ProducerTemplate producerTemplate;
     private final PasswordResetTokenService passwordResetTokenService;
 
@@ -48,13 +47,13 @@ public class UserServiceImpl implements UserService {
                     );
                 });
 
-        if (registerRequest.getRole() == null || registerRequest.getRole().isEmpty()) {
+        if (registerRequest.getRoles() == null || registerRequest.getRoles().isEmpty()) {
             Role defaultRole = roleRepository.findByName(RoleType.USER_ROLE.name())
                     .orElseGet(this::createDefaultUserRole);
-            registerRequest.setRole(Collections.singleton(defaultRole.getName()));
+            registerRequest.setRoles(Collections.singleton(defaultRole.getName()));
         }
 
-        User user = registerMapper.toEntity(registerRequest);
+        User user = userMapper.toEntity(registerRequest);
 
         user.setUsername(registerRequest.getEmail());
         user.setIsActive(false);
@@ -63,8 +62,8 @@ public class UserServiceImpl implements UserService {
             user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         }
 
-        if (registerRequest.getRole() != null && !registerRequest.getRole().isEmpty()) {
-            Set<Role> roles = registerRequest.getRole().stream()
+        if (registerRequest.getRoles() != null && !registerRequest.getRoles().isEmpty()) {
+            Set<Role> roles = registerRequest.getRoles().stream()
                     .map(roleName -> roleRepository.findByName(roleName)
                             .orElseThrow(() -> new NotFoundException("Role not found: " + roleName)))
                     .collect(Collectors.toSet());
@@ -90,31 +89,6 @@ public class UserServiceImpl implements UserService {
         return roleRepository.save(role);
     }
 
-    private User mapDtoToUser(RegisterRequest registerRequest, User existingUser) {
-        User user = (existingUser != null) ? existingUser : new User();
-
-        modelMapper.getModelMapper().map(registerRequest, user);
-
-        if (existingUser == null) {
-            user.setUsername(registerRequest.getEmail());
-        }
-
-        if (registerRequest.getPassword() != null && !registerRequest.getPassword().isBlank()) {
-            user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        }
-
-        if (registerRequest.getRole() != null && !registerRequest.getRole().isEmpty()) {
-            Set<Role> roles = registerRequest.getRole().stream()
-                    .map(roleName -> roleRepository.findByName(roleName)
-                            .orElseThrow(() -> new NotFoundException("Role not found: " + roleName)))
-                    .collect(Collectors.toSet());
-            user.setRoles(roles);
-        }
-
-            return user;
-    }
-
-
     @Override
     public Page<RegisterRequest> getAllUsers(String search, Pageable pageable) {
         Page<User> users;
@@ -125,27 +99,19 @@ public class UserServiceImpl implements UserService {
         } else{
             users = userRepository.findAll(pageable);
         }
-        return users.map(this::mapToDto);
+        return users.map(userMapper::toDto);
     }
 
-    private RegisterRequest mapToDto(User user) {
-        RegisterRequest dto = modelMapper.getModelMapper().map(user, RegisterRequest.class);
-
-        dto.setRole(
-                user.getRoles().stream()
-                        .map(Role::getName)
-                        .collect(Collectors.toSet())
-        );
-
-        return dto;
+    private User getUserOrThrow(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
     }
 
     @Override
     public RegisterRequest findUserById(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found with id " + userId));
+        User user = getUserOrThrow(userId);
 
-        return mapToDto(user);
+        return userMapper.toDto(user);
     }
 
     @Override
@@ -153,7 +119,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found with email " + email));
 
-        return mapToDto(user);
+        return userMapper.toDto(user);
     }
 
     @Override
@@ -161,34 +127,43 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new NotFoundException("User not found with username " + username));
 
-        return mapToDto(user);
+        return userMapper.toDto(user);
     }
 
+    @Transactional
     public void deleteUserById(Long userId) {
-		User user = userRepository.findById(userId)
-				.orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+		User user = getUserOrThrow(userId);
 
         user.getRoles().clear();
         userRepository.delete(user);
 	}
 
     @Override
+    @Transactional
     public RegisterRequest updateUserById(Long userId, UserUpdateDto userUpdateDto) {
-        User existingUser = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+        User existingUser = getUserOrThrow(userId);
 
-        RegisterRequest registerRequest = modelMapper.getModelMapper().map(userUpdateDto, RegisterRequest.class);
+        if (userUpdateDto.getEmail() != null &&
+                !existingUser.getEmail().equals(userUpdateDto.getEmail())) {
 
-        if (!existingUser.getEmail().equals(registerRequest.getEmail())) {
-            userRepository.findByEmail(registerRequest.getEmail()).ifPresent(user -> {
-                throw new ResourceAlreadyExistsException("User with email " + registerRequest.getEmail() + " already exists");
+            userRepository.findByEmail(userUpdateDto.getEmail()).ifPresent(user -> {
+                throw new ResourceAlreadyExistsException("User with email " + userUpdateDto.getEmail() + " already exists");
             });
         }
 
-        User updatedUser = mapDtoToUser(registerRequest, existingUser);
-        updatedUser = userRepository.save(updatedUser);
+        userMapper.updateUserFromDto(userUpdateDto, existingUser);
 
-        return mapToDto(updatedUser);
+        if(userUpdateDto.getRoles() != null){
+            Set<Role> roles = userUpdateDto.getRoles().stream()
+                    .map(roleName -> roleRepository.findByName(roleName)
+                            .orElseThrow(() -> new NotFoundException("Role not found: " + roleName)))
+                    .collect(Collectors.toSet());
+            existingUser.setRoles(roles);
+        }
+
+        User updatedUser = userRepository.save(existingUser);
+        return userMapper.toDto(updatedUser);
+
     }
 
     @Override
