@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserEventProducerRoute extends RouteBuilder {
 
-    @Value("${spring.kafka.topic.user-registered}")
+    @Value("${spring.kafka.topic.notification-events}")
     private String topicName;
 
     @Value("${spring.kafka.bootstrap-servers}")
