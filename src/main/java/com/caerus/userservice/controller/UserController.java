@@ -2,10 +2,7 @@ package com.caerus.userservice.controller;
 
 import java.util.Map;
 
-import com.caerus.userservice.dto.ApiResponse;
-import com.caerus.userservice.dto.RegisterRequest;
-import com.caerus.userservice.dto.ResetPasswordRequest;
-import com.caerus.userservice.dto.UserUpdateDto;
+import com.caerus.userservice.dto.*;
 import com.caerus.userservice.payload.SuccessResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -66,7 +63,7 @@ public class UserController {
         return ResponseEntity.ok(new SuccessResponse<>(registerRequest));
     }
 
-    @GetMapping("username/{username}")
+    @GetMapping("/username/{username}")
     public ResponseEntity<SuccessResponse<RegisterRequest>> getUserByUsername(@PathVariable String username) {
         RegisterRequest registerRequest = userService.findUserByUsername(username);
         return ResponseEntity.ok(new SuccessResponse<>(registerRequest));
@@ -83,15 +80,9 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/forgotPassword")
-    public ResponseEntity<ApiResponse<Void>> forgotPassword(@RequestParam String email) {
-        userService.forgotPassword(email);
-       return ResponseEntity.ok(ApiResponse.success("Reset link has been sent to your email"));
-    }
-
-    @PostMapping("/resetPassword")
-    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        userService.resetPassword(request);
-        return ResponseEntity.ok(ApiResponse.success("Password reset successful"));
+    @GetMapping("/by-email-public")
+    public ResponseEntity<SuccessResponse<UserRolesDto>> getUserByEmailForInternalService(@RequestParam String email) {
+        UserRolesDto response = userService.getUserByEmailForInternalService(email);
+        return ResponseEntity.ok(new SuccessResponse<>(response));
     }
 }

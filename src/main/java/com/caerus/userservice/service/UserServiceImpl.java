@@ -33,10 +33,8 @@ public class UserServiceImpl implements UserService {
 
 	private final UserRepository userRepository;
 	private final RoleRepository roleRepository;
-	private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final ProducerTemplate producerTemplate;
-    private final PasswordResetTokenService passwordResetTokenService;
 
     @Override
     public Long saveUser(RegisterRequest registerRequest) {
@@ -48,7 +46,7 @@ public class UserServiceImpl implements UserService {
                 });
 
         if (registerRequest.getRoles() == null || registerRequest.getRoles().isEmpty()) {
-            Role defaultRole = roleRepository.findByName(RoleType.USER_ROLE.name())
+            Role defaultRole = roleRepository.findByName(RoleType.USER.name())
                     .orElseGet(this::createDefaultUserRole);
             registerRequest.setRoles(Collections.singleton(defaultRole.getName()));
         }
@@ -57,10 +55,6 @@ public class UserServiceImpl implements UserService {
 
         user.setUsername(registerRequest.getEmail());
         user.setIsActive(false);
-
-        if (registerRequest.getPassword() != null && !registerRequest.getPassword().isBlank()) {
-            user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        }
 
         if (registerRequest.getRoles() != null && !registerRequest.getRoles().isEmpty()) {
             Set<Role> roles = registerRequest.getRoles().stream()
@@ -85,7 +79,7 @@ public class UserServiceImpl implements UserService {
 
     private Role createDefaultUserRole() {
         Role role = new Role();
-        role.setName("USER_ROLE");
+        role.setName("USER");
         return roleRepository.save(role);
     }
 
@@ -167,34 +161,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void forgotPassword(String email) {
+    public UserRolesDto getUserByEmailForInternalService(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found with email " + email));
 
-        String resetToken = UUID.randomUUID().toString();
-
-        passwordResetTokenService.saveToken(user.getId(), resetToken, Duration.ofMinutes(15));
-
-        ForgotPasswordEvent event = new ForgotPasswordEvent(user.getId(), user.getEmail(),resetToken,
-                UserEventType.PASSWORD_RESET_REQUESTED.name());
-
-        producerTemplate.sendBody("direct:forgot-password-events", event);
-        log.info("Forgot password event published for user: {}", user.getEmail());
+        return userMapper.toUserRolesDto(user);
     }
-
-    @Override
-    public void resetPassword(ResetPasswordRequest request) {
-        Long userId = passwordResetTokenService.validateToken(request.token()); //!!!Attention change this to email
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
-
-        user.setPassword(passwordEncoder.encode(request.newPassword()));
-        userRepository.save(user);
-
-        passwordResetTokenService.invalidateToken(request.token());
-
-        log.info("Password successfully reset for user: {}", user.getEmail());
-    }
-
 }
