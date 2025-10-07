@@ -3,6 +3,7 @@ package com.caerus.userservice.mapper;
 import com.caerus.userservice.domain.Role;
 import com.caerus.userservice.domain.User;
 import com.caerus.userservice.dto.RegisterRequest;
+import com.caerus.userservice.dto.UserRolesDto;
 import com.caerus.userservice.dto.UserUpdateDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -15,7 +16,6 @@ import java.util.stream.Collectors;
 public interface UserMapper {
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "password", ignore = true)
     @Mapping(target = "isActive", ignore = true)
     @Mapping(target = "username", ignore = true)
     @Mapping(target = "roles", ignore = true)
@@ -23,6 +23,9 @@ public interface UserMapper {
 
     @Mapping(target = "roles", expression = "java(mapRolesToDto(user.getRoles()))")
     RegisterRequest toDto(User user);
+
+    @Mapping(target = "roles", expression = "java(mapRolesToDto(user.getRoles()))")
+    UserRolesDto toUserRolesDto(User user);
 
     @Mapping(target = "roles", ignore = true)
     void updateUserFromDto(UserUpdateDto dto, @MappingTarget User entity);

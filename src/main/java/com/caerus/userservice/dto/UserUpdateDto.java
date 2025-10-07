@@ -21,12 +21,6 @@ public class UserUpdateDto {
     @Email
     private String email;
 
-    @Pattern(
-            regexp = "^(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d]{8,}$",
-            message = "Password must be at least 8 characters, contain at least one uppercase letter and one number"
-    )
-    private String password;
-
     @Pattern(regexp = "\\d{10}", message = "Phone number should have exactly 10 digits")
     private String phone;
 

@@ -27,11 +27,6 @@ public class RegisterRequest {
     @Email(message = "Email should be valid")
     private String email;
 
-    @NotNull(message = "Password is required")
-    @StrongPassword
-    private String password;
-
-
     @Size(max= 4, message = "Country code must be 1 to 4 digits")
     @NotBlank(message = "Country code should not be empty")
     private String countryCode;

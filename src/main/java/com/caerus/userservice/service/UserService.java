@@ -2,9 +2,13 @@ package com.caerus.userservice.service;
 
 import com.caerus.userservice.dto.RegisterRequest;
 import com.caerus.userservice.dto.ResetPasswordRequest;
+import com.caerus.userservice.dto.UserRolesDto;
 import com.caerus.userservice.dto.UserUpdateDto;
+import com.caerus.userservice.payload.SuccessResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestParam;
 
 public interface UserService {
 		
@@ -22,7 +26,5 @@ public interface UserService {
 
     RegisterRequest updateUserById(Long userId, UserUpdateDto userUpdateDto);
 
-    void forgotPassword(String email);
-
-    void resetPassword(ResetPasswordRequest request);
+    UserRolesDto getUserByEmailForInternalService(String email);
 }
