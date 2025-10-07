@@ -41,7 +41,7 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
     topic:
-      user-registered: USER_REGISTERED
+      notification-events: notification-events
 
   data:
     redis:
