@@ -1,12 +1,14 @@
 package com.caerus.userservice.dto;
 
+import java.util.List;
+
 public record UserNotificationDto(
         Long userId,
         String fullName,
         String eventType,
         String email,
-        String countryCode,
         String phoneNumber,
-        String whatsappNumber
+        String whatsappNumber,
+        List<String> channels
 ) {
 }
