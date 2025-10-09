@@ -1,6 +1,8 @@
 package com.caerus.userservice.service;
 
+import com.caerus.userservice.domain.UserPreference;
 import com.caerus.userservice.dto.*;
+import com.caerus.userservice.enums.Channel;
 import com.caerus.userservice.enums.RoleType;
 import com.caerus.userservice.enums.UserEventType;
 import com.caerus.userservice.exception.ResourceAlreadyExistsException;
@@ -11,9 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.ProducerTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,6 +35,7 @@ public class UserServiceImpl implements UserService {
 	private final RoleRepository roleRepository;
     private final UserMapper userMapper;
     private final ProducerTemplate producerTemplate;
+    private final UserPreferenceService userPreferenceService;
 
     @Override
     public Long saveUser(RegisterRequest registerRequest) {
@@ -66,9 +67,16 @@ public class UserServiceImpl implements UserService {
 
         User savedUser = userRepository.save(user);
 
+        userPreferenceService.createDefaultPreferences(savedUser);
+
+        var preferences = userPreferenceService.getPreferences(savedUser.getId());
+        List<String> channels = buildEnabledChannels(preferences);
+
+        String fullPhone = formatPhoneNumber(savedUser.getCountryCode(), savedUser.getPhoneNumber());
+
         //publish event
         UserNotificationDto event = new UserNotificationDto(savedUser.getId(), savedUser.getFirstName() +" "+ savedUser.getLastName(),
-                UserEventType.USER_REGISTERED.name(), savedUser.getEmail(), savedUser.getCountryCode(), savedUser.getPhoneNumber(), savedUser.getPhoneNumber());
+                UserEventType.USER_REGISTERED.name(), savedUser.getEmail(), fullPhone, fullPhone, channels);
 
         producerTemplate.sendBody("direct:user-events", event);
         log.info("User registered event published: {}", event);
@@ -76,6 +84,19 @@ public class UserServiceImpl implements UserService {
         return savedUser.getId();
     }
 
+    private String formatPhoneNumber(String countryCode, String phoneNumber) {
+        String normalized = phoneNumber.replaceAll("[^0-9]","");
+        return countryCode.startsWith("+") ? countryCode + normalized : "+" + countryCode + normalized;
+
+    }
+
+    private List<String> buildEnabledChannels(UserPreference preferences) {
+        List<String> channels = new ArrayList<>();
+        if (Boolean.TRUE.equals(preferences.getEmailEnabled())) channels.add(Channel.EMAIL.name());
+        if (Boolean.TRUE.equals(preferences.getSmsEnabled())) channels.add(Channel.SMS.name());
+        if (Boolean.TRUE.equals(preferences.getWhatsappEnabled())) channels.add(Channel.WHATSAPP.name());
+        return channels;
+    }
 
     private Role createDefaultUserRole() {
         Role role = new Role();
