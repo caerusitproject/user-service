@@ -55,7 +55,7 @@ eureka:
       #defaultZone: http://eureka-server:8761/eureka/
       defaultZone: http://localhost:8761/eureka/
   instance:
-    prefer-ip-address: false
+    prefer-ip-address: true
     hostname: user-service
     instance-id: ${spring.application.name}:${server.port}
 
@@ -96,7 +96,7 @@ camel:
 #      key-serializer: org.apache.kafka.common.serialization.StringSerializer
 #      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 #    topic:
-#      user-registered: USER_REGISTERED
+#      notification-events: notification-events
 #
 #  data:
 #    redis:
@@ -108,7 +108,7 @@ camel:
 #    service-url:
 #      defaultZone: http://eureka-server:8761/eureka/
 #  instance:
-#    prefer-ip-address: false
+#    prefer-ip-address: true
 #    hostname: user-service
 #    instance-id: ${spring.application.name}:${server.port}
 #
