@@ -1,7 +1,7 @@
 <configuration scan="true">
 
     <property name="LOG_PATH" value="logs"/>
-    <property name="APP_NAME" value="userservice"/>
+    <property name="APP_NAME" value="user-service"/>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -15,10 +15,27 @@
             <fileNamePattern>${LOG_PATH}/${APP_NAME}/${APP_NAME}-%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <customFields>{"app":"${APP_NAME}","env":"dev"}</customFields>
-            <includeMdcKeyName>correlationId</includeMdcKeyName>
-            <includeMdcKeyName>userId</includeMdcKeyName>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp fieldName="timestamp"/>
+                <logLevel fieldName="level"/>
+                <threadName fieldName="thread"/>
+                <loggerName fieldName="source"/>
+                <message fieldName="message"/>
+                <stackTrace fieldName="error"/>
+
+                <provider class="net.logstash.logback.composite.GlobalCustomFieldsJsonProvider">
+                    <customFields>{"app":"${APP_NAME}","env":"dev"}</customFields>
+                </provider>
+
+                <mdc>
+                    <includeMdcKeyName>correlationId</includeMdcKeyName>
+                    <includeMdcKeyName>userId</includeMdcKeyName>
+                </mdc>
+            </providers>
+
+            <jsonGeneratorDecorator
+                    class="net.logstash.logback.decorate.PrettyPrintingJsonGeneratorDecorator"/>
         </encoder>
     </appender>
 
