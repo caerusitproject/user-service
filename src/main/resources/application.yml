@@ -15,7 +15,6 @@ spring:
 #  config:
 #    import: optional:configserver:http://config-server:8888
   datasource:
-    #url: jdbc:postgresql://postgres:5432/user_service
     url: jdbc:postgresql://localhost:5432/user_service
     username: postgres
     password: Welcome@1234
@@ -31,38 +30,31 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          #jwk-set-uri: http://identity-service:8086/.well-known/jwks.json
           jwk-set-uri: http://localhost:8086/.well-known/jwks.json
 
   kafka:
-    #bootstrap-servers: broker:29092
     bootstrap-servers: localhost:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
     topic:
       notification-events: notification-events
 
   data:
     redis:
-      #host: redis
       host: localhost
       port: 6379
 
 eureka:
   client:
     service-url:
-      #defaultZone: http://eureka-server:8761/eureka/
       defaultZone: http://localhost:8761/eureka/
   instance:
     prefer-ip-address: true
     hostname: user-service
     instance-id: ${spring.application.name}:${server.port}
-
-camel:
-  springboot:
-    name: userservice-camel
-
 
 #server:
 #  port: 8081
