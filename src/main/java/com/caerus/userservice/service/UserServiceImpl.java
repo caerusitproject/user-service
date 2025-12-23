@@ -7,10 +7,10 @@ import com.caerus.userservice.enums.RoleType;
 import com.caerus.userservice.enums.UserEventType;
 import com.caerus.userservice.exception.ResourceAlreadyExistsException;
 import com.caerus.userservice.mapper.UserMapper;
+import com.caerus.userservice.messaging.UserEventPublisher;
 import lombok.RequiredArgsConstructor;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.camel.ProducerTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -34,8 +34,8 @@ public class UserServiceImpl implements UserService {
 	private final UserRepository userRepository;
 	private final RoleRepository roleRepository;
     private final UserMapper userMapper;
-    private final ProducerTemplate producerTemplate;
     private final UserPreferenceService userPreferenceService;
+    private final UserEventPublisher userEventPublisher;
 
     @Override
     public Long saveUser(RegisterRequest registerRequest) {
@@ -78,7 +78,7 @@ public class UserServiceImpl implements UserService {
         UserNotificationDto event = new UserNotificationDto(savedUser.getId(), savedUser.getFirstName() +" "+ savedUser.getLastName(),
                 UserEventType.USER_REGISTERED.name(), savedUser.getEmail(), fullPhone, fullPhone, channels);
 
-        producerTemplate.sendBody("direct:user-events", event);
+        userEventPublisher.publish(event);
         log.info("User registered event published: {}", event);
 
         return savedUser.getId();
